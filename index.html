@@ -11,13 +11,13 @@
 			font-family: 'Resagnicto';
 			src: url('libs/Resagnicto.ttf') format('truetype');
 		}
-		
+
 		@font-face {
 			font-family: 'HerrVonMuellerhoff';
 			src: url('libs/HerrVonMuellerhoff-Regular.otf') format('opentype');
 		}
 
-		
+
 		@font-face {
 			font-family: 'Poiret One';
 			src: url('libs/PoiretOne-Regular.ttf') format('truetype');
@@ -35,7 +35,7 @@
 	<title>BESPOKE AUTOMATA</title>
 	<link rel="stylesheet" href="libs/airoyyo.css">
 	<script>
-		
+
 
 
 	</script>
@@ -52,7 +52,7 @@
 		<span><h1 id="site_title" style="display:inline-block; margin: 0px 10px;">
 			<span id="site_title_first">BESPOKE</span>
 			<span id="site_title_last">AUTOMATA</span>
-		</h1> 
+		</h1>
 			<img id="site_icon" src="icon.svg" alt="icon">
 			</span>
 		<input id="top_menu_file_name" type="text" value="untitled_brain">
@@ -77,11 +77,11 @@
 			<button id="import_workspace" class="bottom_panel_button">Import Workspace</button>
 			<!-- clear workspace button -->
 			<button id="clear_workspace" class="bottom_panel_button">Clear Workspace</button>
-		</div>		
+		</div>
 	</div>
 	<!-- left panel toggle button-->
 	<div id="left_panel_toggle" class="panel_toggle_closed">▶</div>
-	
+
 
 <canvas id='mycanvas' width='1024' height='720' style='border: 1px solid'></canvas>
 <script>
@@ -150,7 +150,7 @@
 				file.classList.add("active");
 			});
 			file_list_element.appendChild(file);
-			
+
 			// add download button
 			let download_button = document.createElement("button");
 			download_button.innerHTML = "↓";
@@ -167,13 +167,13 @@
 					document.body.appendChild(element);
 					element.click();
 					document.body.removeChild(element);
-					setTimeout( function(){ URL.revokeObjectURL( url ); }, 1000*60 ); //wait one minute to revoke url	
+					setTimeout( function(){ URL.revokeObjectURL( url ); }, 1000*60 ); //wait one minute to revoke url
 				} else {
 					alert( "File not found: " + file_name );
 					return;
 				}
 			});
-			
+
 
 			// add delete button
 			let delete_button = document.createElement("button");
@@ -225,10 +225,10 @@
 			file.appendChild(delete_button);
 			file.appendChild(download_button);
 
-			
+
 		}
 
-		
+
 	}
 
 	// on window load, check weaviate connection
@@ -241,7 +241,7 @@
 		// set up file #left_panel #file_list_element
 		// add files to file list
 		draw_file_list(file_list);
-	}	
+	}
 
 	// set up left panel toggle button
 	let left_panel_toggle = document.getElementById("left_panel_toggle");
@@ -265,7 +265,7 @@
 		LiteGraph.registerNodeType("Text/Text", Text_Node );
 		LiteGraph.registerNodeType("Text/Random Text", Random_Selection_Node );
 
-		
+
 		LiteGraph.registerNodeType("Text/Prefix Text", Prefix_Text_Node );
 		LiteGraph.registerNodeType("Text/Suffix Text", Suffix_Text_Node );
 		LiteGraph.registerNodeType("Text/Concatenate Text", Concatenate_Text_Node );
@@ -281,7 +281,7 @@
 		LiteGraph.registerNodeType("LLM/Vision", Vision_Node );
 		//Audio_Generation_Node
 		LiteGraph.registerNodeType("Audio/Audio Generation", Audio_Generation_Node );
-		//Start_Node 
+		//Start_Node
 		LiteGraph.registerNodeType("Control/Start", Start_Node );
 		//Counter_Node
 		LiteGraph.registerNodeType("Control/Counter", Counter_Node );
@@ -343,15 +343,17 @@
 		LiteGraph.registerNodeType("IO/Dictionary Bus Set", Dictionary_Bus_Set_Node );
 		// Text/Multiline_Text_Node
 		LiteGraph.registerNodeType("Text/Multiline Text", Multiline_Text_Node );
+		// Ollama_Node
+		LiteGraph.registerNodeType("LLM/Ollama", Ollama_Node );
 	}
 
 	var graph = new LGraph();
-	
+
 	set_nodes();
 
 	var canvas = new LGraphCanvas("#mycanvas", graph);
 	updateEditorHiPPICanvas();
-	window.addEventListener("resize", function() { 
+	window.addEventListener("resize", function() {
 		canvas.resize();
 		updateEditorHiPPICanvas();
 	} );
@@ -360,10 +362,10 @@
 		const ratio = window.devicePixelRatio;
 		thisCanvas = document.getElementById("mycanvas");
 		if(ratio == 1) { return }
-		const width = /*window viewport*/ 
+		const width = /*window viewport*/
 			Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 		const height = /*window viewport*/
-			Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);			
+			Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
 
 		thisCanvas.width = width * ratio;
 		thisCanvas.height = height * ratio;
@@ -372,7 +374,7 @@
 		thisCanvas.getContext("2d").scale(ratio, ratio);
 		return thisCanvas;
 	}
-	
+
 
 	// set menu bar button actions
 	elem = document.getElementById("top_menu_bar");
@@ -421,7 +423,7 @@
 		top_menu_file_name.value = localStorage.getItem( "current_loaded_graph_name" );
 		current_loaded_graph_name = top_menu_file_name.value;
 		// load graph from localStorage
-		let data = localStorage.getItem( top_menu_file_name.value);		
+		let data = localStorage.getItem( top_menu_file_name.value);
 		if(data) {
 			graph.configure( JSON.parse( data ) );
 			save_buffer.push( data );
@@ -520,7 +522,7 @@
 		document.title = "Bespoke Automata - " + top_menu_file_name.value;
 		// update the current_loaded_graph_name variable in localStorage
 		current_loaded_graph_name = top_menu_file_name.value;
-		
+
 	});
 	elem.querySelector("#import_brain").addEventListener("click", function(){
 		// import graph from .brain file upload prompt
@@ -542,7 +544,7 @@
 					let data = e.target.result;
 					// add initial state to save buffer
 					save_buffer.push( data );
-					
+
 					graph.configure( JSON.parse( data ) );
 					let name = file.name.split(".")[0];
 					// set text box to file name
@@ -553,7 +555,7 @@
 					localStorage.setItem( name, data );
 					// update the current_loaded_graph_name variable in localStorage
 					localStorage.setItem( "current_loaded_graph_name", name );
-					
+
 					current_loaded_graph_name = name;
 					// add or move file to front of file list
 					// save file list to localStorage
@@ -666,7 +668,7 @@
 		}
 	});
 	elem.querySelector("#clear_workspace").addEventListener("click", clear_workspace );
-	
+
 
 
 	// on any change of the graph, save it to localStorage
@@ -691,7 +693,7 @@
 		if(is_saving) { return; }
 
 		let data = JSON.stringify( graph.serialize() );
-		
+
 		if( data !== localStorage.getItem( current_loaded_graph_name ) ) {
 			localStorage.setItem( current_loaded_graph_name, data );
 			// if buffer index is not at the end, clear the buffer after the index

@@ -2,21 +2,22 @@
 /*****************************************************************************************/
 /***************************************NODES********************************************/
 /*****************************************************************************************/
-	
+
 	if(typeof module !== 'undefined') {
 		const Weaviate = require("./weaviate.js");
 		LiteGraph = require("./litegraph.js");
+		Ollama = require("ollama");
 		// dummy window object
 		window = {};
-	}	
+	}
 	// global bus dictionary
 	global_bus_dictionaries = {};
 
 	const gpt_endpoint = '/v1/chat/completions';
 	const gpt_url = 'https://api.openai.com'
 	const default_gpt_model = "gpt-3.5-turbo";
-	
-	call_gpt = async function(messages, api_key, url=gpt_url, model=default_gpt_model, grammar=undefined) { 
+
+	call_gpt = async function(messages, api_key, url=gpt_url, model=default_gpt_model, grammar=undefined) {
 		const headers = {
 			'Content-Type': 'application/json',
 			'Authorization': `Bearer ${api_key}`
@@ -27,20 +28,32 @@
 			model: model,
 			messages: messages,
 			max_tokens: 2000,
-			stream: false, 
+			stream: false,
 			grammar: grammar
 		  };
 		  final_url = url + gpt_endpoint;
-		
+
 		  const response = await fetch(final_url, {
 			method: 'POST',
 			headers: headers,
 			body: JSON.stringify(data)
 		  });
-		
+
 		  const responseData = await response.json();
 		  return responseData.chat.choices[0].message.content;
 
+	}
+
+	const default_ollama_model = "llama2";
+
+	call_ollama = async function(messages, model=default_ollama_model) {
+		  const response = await Ollama.chat({
+			model: model,
+			messages: messages,
+		  })
+
+		  const responseData = await response.json();
+		  return responseData.message.content;
 	}
 
 	query_wikipedia = async function(query, milvus_url, top_k=3) {
@@ -52,13 +65,13 @@
 			"query": query,
 			"top_k": top_k
 		  };
-		
+
 		  const response = await fetch(milvus_url + "/wiki", {
 			method: 'POST',
 			headers: headers,
 			body: JSON.stringify(data)
 		  });
-		
+
 		  const responseData = await response.json();
 		  return responseData;
 	}
@@ -73,13 +86,13 @@
 			"collection_name": class_key,
 			"top_k": top_k
 		  };
-		
+
 		  const response = await fetch(milvus_url + "/query_collection", {
 			method: 'POST',
 			headers: headers,
 			body: JSON.stringify(data)
 		  });
-		
+
 		  const responseData = await response.json();
 		  return responseData;
 	}
@@ -96,13 +109,13 @@
 			"collection_name": class_key,
 			"dimension": 768
 		  };
-		
+
 		  const response = await fetch(milvus_url + "/create_collection", {
 			method: 'POST',
 			headers: headers,
 			body: JSON.stringify(data)
 		  });
-		
+
 		  const responseData = await response.json();
 		  return responseData;
 	}
@@ -116,13 +129,13 @@
 			"collection_name": class_key,
 			"vectors": [text]
 		  };
-		
+
 		  const response = await fetch(milvus_url + "/insert", {
 			method: 'POST',
 			headers: headers,
 			body: JSON.stringify(data)
 		  });
-		
+
 		  const responseData = await response.json();
 		  return responseData;
 	}
@@ -155,34 +168,34 @@
 		constructor() {
 			this.events = {};
 		}
-		
+
 		// Register a listener for the given event.
 		on(event, listener, sender) {
 			if (!this.events[event]) {
 				this.events[event] = [];
 			}
-			
+
 			// Check if the listener is already registered for the event and sender
 			const isListenerRegistered = this.events[event].some(
 				l => l.listener === listener && l.sender === sender
 			);
-			
+
 			if(isListenerRegistered) {
 				// Listener is already registered, return without error
 				return;
 			}
-			
+
 			// If not already registered, add the listener
 			this.events[event].push({listener, sender});
 		}
-		
+
 		// Remove all listeners for the given sender.
 		offSender(sender) {
 			for (let event in this.events) {
 				this.events[event] = this.events[event].filter(l => l.sender !== sender);
 			}
 		}
-		
+
 		// Emit the event, calling all listeners registered for this event.
 		emit(event, ...args) {
 			if (!this.events[event]) return;
@@ -204,12 +217,12 @@
 			const audioBlob = audioQueue.shift(); // Get the first audio blob from the queue
 			const audioUrl = URL.createObjectURL(audioBlob);
 			const audio = new Audio(audioUrl);
-			
+
 			audio.onended = function() {
 				isPlaying = false; // Reset the flag when audio ends
 				playAudio(); // Try to play the next audio in the queue
 			};
-			
+
 			audio.play();
 		}
 	}
@@ -217,17 +230,17 @@
 		function escapeRegExp(string) {
 			return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 		}
-		
+
 		const sanitizedWords = words.map(escapeRegExp);
 		const regex = new RegExp('\\b(' + sanitizedWords.join('|') + ')\\b', 'i'); // 'i' for case insensitive match
-		
+
 		return regex.test(text);
 	}
 	function startPolling(requestId) {
 		if (isPolling) return; // If a polling request is in progress, exit
-	
+
 		isPolling = true; // Set the flag to true indicating a polling request is in progress
-	
+
 		fetch(`http://192.168.0.7:2702/get-audio/${requestId}`)
 		.then(response => {
 			if (response.ok && response.headers.get('Content-Type') === 'audio/wav') {
@@ -247,7 +260,7 @@
 			setTimeout(() => startPolling(requestId), 1000); // Schedule the next polling request after 5 seconds
 		});
 	}
-	
+
 	function startAudioGeneration(text) {
 		fetch('http://192.168.0.7:2702/text-to-wav', {
 			method: 'POST',
@@ -266,28 +279,28 @@
 	function concatenateAudioChunks(chunks) {
 		// Calculate the total length of all chunks
 		let totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-		
+
 		// Create a new Float32Array with the total length
 		let result = new Float32Array(totalLength);
-		
+
 		// Fill the result array with data from each chunk
 		let offset = 0;
 		for (let chunk of chunks) {
 			result.set(chunk, offset);
 			offset += chunk.length;
 		}
-		
+
 		return result;
 	}
-	
+
 	async function saveTotalAudio() {
 		let combinedAudioData = [];
 		let headerLength = 44;  // Standard WAV header length
-	
+
 		for (let i = 0; i < totalAudioQueue.length; i++) {
 			let arrayBuffer = await totalAudioQueue[i].arrayBuffer();
 			let dataView = new DataView(arrayBuffer);
-	
+
 			if (i === 0) {
 				// For the first blob, keep the whole content
 				combinedAudioData.push(new Uint8Array(arrayBuffer));
@@ -296,14 +309,14 @@
 				combinedAudioData.push(new Uint8Array(arrayBuffer, headerLength));
 			}
 		}
-	
+
 		let combinedBuffer = concatenateUint8Arrays(combinedAudioData);
-	
+
 		// Adjust WAV header to reflect new length
 		updateWavHeader(combinedBuffer);
-	
+
 		let blob = new Blob([combinedBuffer], {type: 'audio/wav'});
-		
+
 		let url = window.URL.createObjectURL(blob);
 		let a = document.createElement('a');
 		a.href = url;
@@ -313,32 +326,32 @@
 		a.remove();
 		window.URL.revokeObjectURL(url);
 	}
-	
+
 	function concatenateUint8Arrays(arrayList) {
 		let totalLength = arrayList.reduce((acc, array) => acc + array.length, 0);
 		let result = new Uint8Array(totalLength);
 		let offset = 0;
-	
+
 		for (let array of arrayList) {
 			result.set(array, offset);
 			offset += array.length;
 		}
-	
+
 		return result;
 	}
-	
+
 	function updateWavHeader(buffer) {
 		let dataView = new DataView(buffer.buffer);
 		let fileSize = buffer.length;
-		
+
 		// Update RIFF chunk size
 		dataView.setUint32(4, fileSize - 8, true);
-	
+
 		// Update data chunk size
 		let dataLength = fileSize - 44;
 		dataView.setUint32(40, dataLength, true);
 	}
-	
+
 	async function create_simple_vector_db_collection(collection_name, url) {
 		console.log("creating collection: " + collection_name)
 		let insert_response = await fetch(url + "/create_collection", {
@@ -357,10 +370,10 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ 
-				collection_name: collection_name, 
+			body: JSON.stringify({
+				collection_name: collection_name,
 				title: title,
-				text: text 
+				text: text
 			})
 		});
 	}
@@ -427,8 +440,8 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ 
-				collection_name: collection_name, 
+			body: JSON.stringify({
+				collection_name: collection_name,
 				text: query,
 				top_n: top_n
 			 })
@@ -448,7 +461,7 @@
 			},
 			body: JSON.stringify({ collection_name: collection_name })
 		});
-		
+
 		let response_json = await exists_response.json()
 		return response_json;
 	}
@@ -489,7 +502,7 @@
 		let random_key = keys[Math.floor(Math.random() * keys.length)];
 		this.setOutputData(0, this.properties.dictionary[random_key]);
 	}
-		
+
 	// random array item node
 	function Random_Array_Item_Node(){
 		// takes in array and outputs a random item from it
@@ -517,10 +530,10 @@
 	function Note_Node(){
 		this.properties = { value: "" };
 		this.text_widget = this.addWidget("text", "", this.properties.value, "value", {
-			multiline: true, 
+			multiline: true,
 			lines: 6
 		});
-		
+
 	}
 	Note_Node.title = "~~~Note~~~";
 	// faint yellow like sticky notes
@@ -531,7 +544,7 @@
 		this.properties.value = this.text_widget.value;
 	}
 
-	
+
 	function Brain_Node(){
 		this.addInput("input dict", "string");
 		this.addInput("url", "string");
@@ -548,7 +561,7 @@
 		this.local_widget = this.addWidget("toggle","Local",this.properties.local,"local");
 		// brain name widget
 		this.brain_name_widget = this.addWidget("text","Brain Name",this.properties.brain_name,"brain_name");
-		this.call_brain = async function(brain, input_variables) { 
+		this.call_brain = async function(brain, input_variables) {
 			let final_url = this.properties.url + "/brains/" + this.properties.brain_name;
 
 			const headers = {
@@ -586,7 +599,7 @@
 			let brain = await load_brain(this.properties.brain_name);
 			// run brain
 			let output = await run_brain(brain, this.properties.input_variables);
-			
+
 			// set output
 			this.setOutputData(0, JSON.stringify(output));
 		} else {
@@ -619,7 +632,7 @@
 		this.addInput("in dict", "string");
 		this.addInput("var name", "string");
 		this.addOutput("var value", "string");
-		this.properties = { 
+		this.properties = {
 			variable_name: ""
 		};
 		this.text_widget = this.addWidget("text","Variable Name",this.properties.variable_name,"variable_name");
@@ -655,7 +668,7 @@
 		this.addInput("var name", "string");
 		this.addInput("var value", "string");
 		this.addOutput("out dict", "string");
-		this.properties = { 
+		this.properties = {
 			variable_name: "",
 			variable_value: ""
 		};
@@ -852,18 +865,18 @@
 	}
 	Array_Assembler_Node.title = "Array Assembler";
 	Array_Assembler_Node.prototype.onExecute = function() {
-		if(this.getInputData(1) !== undefined 
+		if(this.getInputData(1) !== undefined
 		&& this.getInputData(1) !== ""
 		&& this.getInputData(1) !== this.properties.variable_value) {
 			this.properties.variable_value = this.getInputData(1);
 		} else {
 			return;
 		}
-		
+
 		if(this.getInputData(0) !== undefined && this.getInputData(0) !== "") {
 			this.properties.array = JSON.parse(this.getInputData(0));
-		} 
-		
+		}
+
 		this.properties.array.push(this.properties.variable_value);
 
 		if(this.getInputData(2) !== undefined && this.getInputData(2) !== "") {
@@ -878,7 +891,7 @@
 		}
 
 		this.setOutputData(0, JSON.stringify(this.properties.array));
-		
+
 	}
 
 	function Array_Item_Forward_Node(){
@@ -902,7 +915,7 @@
 
 		if(this.getInputData(0) !== undefined && this.getInputData(0) !== "") {
 			let input_array = JSON.parse(this.getInputData(0));
-			
+
 			// check that index is in bounds
 			if(this.properties.index < 0 || this.properties.index >= input_array.length) {
 				console.log("index out of bounds");
@@ -911,7 +924,7 @@
 			this.setOutputData(0, JSON.stringify(input_array[this.properties.index]));
 		}
 	}
-	
+
 	function Array_Stepper_Node(){
 		this.addInput("in array", "string");
 		this.addInput("step text", "string");
@@ -928,7 +941,7 @@
 	Array_Stepper_Node.title = "Array Stepper";
 	Array_Stepper_Node.prototype.onExecute = function() {
 		// check for reset
-		if(this.getInputData(2) !== undefined && this.getInputData(2) !== "") {	
+		if(this.getInputData(2) !== undefined && this.getInputData(2) !== "") {
 			if(this.getInputData(2) !== this.properties.last_reset_text) {
 				this.properties.step = 0;
 				this.step_widget.value = 0;
@@ -936,10 +949,10 @@
 				this.setOutputData(0, "");
 			}
 		}
-		
+
 		if(this.getInputData(0) !== undefined && this.getInputData(0) !== "") {
 			let input_array = JSON.parse(this.getInputData(0));
-			if(this.getInputData(1) !== undefined 
+			if(this.getInputData(1) !== undefined
 				&& this.getInputData(1) !== ""
 				&& this.getInputData(1) !== this.properties.last_step_text) {
 				this.properties.step += 1;
@@ -961,7 +974,7 @@
 		this.addInput("in", "string");
 		this.addInput("collection", "string");
 		this.addInput("svdb_url", "string");
-		this.properties = { 
+		this.properties = {
 			collection: "",
 			last_input: "" ,
 			svdb_url: ""
@@ -994,12 +1007,12 @@
 			this.properties.last_input = this.getInputData(0);
 			console.log("writing to simple vector db");
 			let collection_exists_response = await collection_exists(this.properties.collection, this.properties.svdb_url);
-			
+
 			if(!collection_exists_response) {
 				//create collection
 				console.log("creating collection");
 				let create_response = await create_simple_vector_db_collection(this.properties.collection, this.properties.svdb_url);
-				
+
 			}
 
 			let insert_response = await insert_simple_vector_db(this.properties.collection, this.properties.last_input, this.properties.last_input, this.properties.svdb_url);
@@ -1016,7 +1029,7 @@
 		this.properties = {
 			collection: "",
 			svdb_url: "",
-			top_n: 2		
+			top_n: 2
 		};
 		this.text_widget = this.addWidget("text","Collection",this.properties.collection, "collection");
 		this.top_n_widget = this.addWidget("number","Top N",this.properties.top_n,"top_n", {precision:0, step:10});
@@ -1079,7 +1092,7 @@
 	}
 	Text_Node.title = "Text";
 	Text_Node.prototype.onExecute = function() {
-		
+
 		if(this.getInputData(0) !== undefined) {
 			this.text_widget.value = this.getInputData(0);
 			this.properties.value = this.getInputData(0);
@@ -1100,7 +1113,7 @@
 	}
 	Multiline_Text_Node.title = "Multiline Text";
 	Multiline_Text_Node.prototype.onExecute = function() {
-		
+
 		if(this.getInputData(0) !== undefined) {
 			this.text_widget.value = this.getInputData(0);
 			this.properties.value = this.getInputData(0);
@@ -1124,7 +1137,7 @@
 						"New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
 						"Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
 						"Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming" ],
-			"Famous People": [ 
+			"Famous People": [
 				"Albert Einstein",
 				"Isaac Newton",
 				"Cleopatra",
@@ -1375,7 +1388,7 @@
 	}
 	Random_Selection_Node.title = "Random Text";
 	Random_Selection_Node.prototype.onExecute = function() {
-		
+
 		let result = this.selection_options[this.properties.value][Math.floor(Math.random() * this.selection_options[this.properties.value].length)];
 		this.setOutputData(0, result );
 	}
@@ -1384,7 +1397,7 @@
 
 
 
-	
+
 
 	// long term memory storage node
 	function Weaviate_Ingest_Node(){
@@ -1421,7 +1434,7 @@
 		this.addInput("class key", "string");
 		this.addOutput("out", "string");
 
-		this.properties = { 
+		this.properties = {
 			class_key: "",
 			record_count: 3
 		};
@@ -1439,7 +1452,7 @@
 		if(this.getInputData(1) !== undefined) {
 			this.properties.class_key = this.getInputData(1);
 		}
-		
+
 		// if class does not exist, create it
 		if(!await weaviateInstance.classExists(this.properties.class_key)) {
 			await weaviateInstance.createClass(this.properties.class_key, [
@@ -1460,7 +1473,7 @@
 			this.setOutputData(0, result );
 		}
 	}
-	
+
 	function Weaviate_Clear_Node(){
 		this.addInput("action", LiteGraph.EVENT);
 		this.addInput("text", "string");
@@ -1521,7 +1534,7 @@
 	GPT_Node.prototype.onExecute = async function() {
 
 		this.properties.buffer_length = this.buffer_length_widget.value;
-		
+
 
 		let should_clear = this.getInputData(5);
 		if(should_clear !== undefined && should_clear !== "") {
@@ -1590,6 +1603,85 @@
 		this.setOutputData(1, JSON.stringify(this.properties.chat_buffer));
 	}
 
+	function Ollama_Node() {
+		this.addInput("system", "string");
+		this.addInput("user", "string");
+		this.addInput("model", "string");
+
+		// yes/no switch widget for memory on/off
+		this.properties = {
+			buffer_length: 0,
+			chat_buffer: [],
+			model: "llama2"
+		};
+
+		// buffer length widget
+		this.buffer_length_widget = this.addWidget("number","Buffer Length",this.properties.buffer_length, "buffer_length", {precision:0, step:10});
+		// clear buffer button
+		this.addInput("clear", "string");
+
+		this.addWidget("button","Clear Buffer","", ()=>{
+			this.properties.chat_buffer = [];
+		});
+
+		this.addOutput("out", "string");
+		this.addOutput("buffer", "string");
+	}
+	Ollama_Node.title = "Ollama";
+	Ollama_Node.prototype.onExecute = async function() {
+
+		this.properties.buffer_length = this.buffer_length_widget.value;
+
+
+		let should_clear = this.getInputData(5);
+		if(should_clear !== undefined && should_clear !== "") {
+			this.properties.chat_buffer = [];
+		}
+		let system = this.getInputData(0);
+		if(system === undefined) {
+			this.setOutputData(0, "");
+			return;
+		}
+
+		let user = this.getInputData(1);
+		if(user === undefined || user === "") {
+			this.setOutputData(0, "");
+			return;
+		}
+
+		console.log("-----Ollama node executing-----")
+		console.log("user: " + user)
+
+		if(this.getInputData(2) !== undefined && this.getInputData(2) !== "") {
+			this.properties.model = this.getInputData(2);
+		}
+		let system_role = {"role": "system", "content": system};
+
+		if(this.properties.buffer_length <= 0) {
+			this.properties.buffer_length = 0;
+			this.properties.chat_buffer = [];
+		}
+
+		this.properties.chat_buffer.push({"role": "user", "content": user});
+
+		// check for buffer overflow
+
+		if(this.properties.chat_buffer.length > this.properties.buffer_length && this.properties.buffer_length > 0) {
+			this.properties.chat_buffer.shift();
+		}
+
+		let messages = this.properties.chat_buffer.map((item) => item);
+		console.log("messages: " + JSON.stringify(messages));
+
+		// prepend system message
+		messages.unshift(system_role);
+
+		let ollama_response = await call_ollama(messages, this.properties.model);
+
+		this.properties.chat_buffer.push({"role": "assistant", "content": ollama_response});
+		this.setOutputData(0, ollama_response);
+		this.setOutputData(1, JSON.stringify(this.properties.chat_buffer));
+	}
 
 	function Password_Node() {
 		// just a text input node that hides the text and an output
@@ -1605,12 +1697,12 @@
 		this.setOutputData(0, this.text_widget.value);
 	}
 
-	
+
 
 	//audio generation node, text in, play audio out
 	function Audio_Generation_Node(){
 		this.addInput("text", "string");
-	
+
 	}
 	Audio_Generation_Node.title = "Audio Generation";
 	Audio_Generation_Node.prototype.onExecute = async function() {
@@ -1622,8 +1714,8 @@
 			await startAudioGeneration(text)
 		}
 
-		
-		
+
+
 		// get back wav file
 		// play wav file
 
@@ -1687,14 +1779,14 @@
 			return;
 		} else {
 			this.properties.last_input = input.trim();
-			
+
 		}
 
 		let context = this.getInputData(1) || "";
 		let system = this.getInputData(2) || "";
 
 		if (context !== "") {
-			system += " Answer the question below given the following context: " + context 
+			system += " Answer the question below given the following context: " + context
 		}
 		system += " Please answer the question below about this text with a simple yes or no, followed by a sentence about your reasoning: " + input;
 
@@ -1716,7 +1808,7 @@
 
 		let gpt_response = await call_gpt(messages, api_key, server_url, this.properties.model);
 
-		
+
 		this.properties.reasoning = gpt_response;
 		this.setOutputData(4, gpt_response);
 
@@ -1739,7 +1831,7 @@
 	function Prefix_Text_Node(){
 		this.addInput("in", "string");
 		this.addOutput("out", "string");
-		this.properties = { 
+		this.properties = {
 			prefix: ""
 		 };
 		this.text_widget = this.addWidget("text","Prefix",this.properties.prefix, "prefix");
@@ -1797,7 +1889,7 @@
 		} else  {
 			this.properties.last = this.text_widget_last.value;
 		}
-		
+
 		this.setOutputData(0, this.properties.first + " " + this.properties.last );
 
 	}
@@ -1837,7 +1929,7 @@
 		this.reset_widget = this.addWidget(
 			"text",
 			"Reset Event Name",
-			this.properties.reset_event_name, 
+			this.properties.reset_event_name,
 			function(value, widget, node){
 				node.properties.reset_event_name = value;
 				node.eventEmmiter.on(node.properties.reset_event_name, ()=>{
@@ -1849,7 +1941,7 @@
 	Emit_Node.title = "Event Emitter";
 	Emit_Node.prototype.onExecute = function() {
 		// if input(1) is not undefined and is different from last_reset set it
-		if(this.getInputData(2) !== undefined 
+		if(this.getInputData(2) !== undefined
 		&& this.getInputData(2) !== this.properties.last_reset
 		&& this.getInputData(2) !== "") {
 			this.properties.reset_event_name = this.getInputData(2);
@@ -1857,20 +1949,20 @@
 
 		if(this.last_reset !== this.properties.reset_event_name) {
 			// remove previous listener
-			this.last_reset = this.properties.reset_event_name;			
+			this.last_reset = this.properties.reset_event_name;
 		}
 
 		this.eventEmmiter.on(this.properties.reset_event_name, ()=>{
 				this.properties.last_input = "";
 			}, this);
 
-		if(this.getInputData(1) !== undefined 
+		if(this.getInputData(1) !== undefined
 		&& this.getInputData(1) !== this.properties.event_name
 		&& this.getInputData(1) !== "") {
 			this.properties.event_name = this.getInputData(1);
-		} 
+		}
 
-		if(this.getInputData(0) !== undefined 
+		if(this.getInputData(0) !== undefined
 		&& this.getInputData(0) !== this.properties.last_input
 		&& this.getInputData(0) !== "") {
 			this.properties.last_input = this.getInputData(0);
@@ -1919,7 +2011,7 @@
 		} else if(this.number_widget.value !== "") {
 			this.properties.number = this.number_widget.value;
 		}
-		if(this.getInputData(1) !== undefined && this.getInputData(1) !== "") {			
+		if(this.getInputData(1) !== undefined && this.getInputData(1) !== "") {
 			this.setOutputData(0, this.properties.number);
 		} else {
 			this.setOutputData(0, "");
@@ -1943,7 +2035,7 @@
 		} else if(this.text_widget.value !== "") {
 			this.properties.text = this.text_widget.value;
 		}
-		if(this.getInputData(1) !== undefined && this.getInputData(1) !== "") {			
+		if(this.getInputData(1) !== undefined && this.getInputData(1) !== "") {
 			this.setOutputData(0, this.properties.text);
 		} else {
 			this.setOutputData(0, "");
@@ -1983,12 +2075,12 @@
 		this.addOutput("out", "string");
 		this.properties = {
 			"compare_type": "greater than",
-			"compare_types": ["greater than", 
-							  "less than", 
-							  "equal to", 
-							  "not equal to", 
-							  "greater than or equal to", 
-							  "less than or equal to"],	
+			"compare_types": ["greater than",
+							  "less than",
+							  "equal to",
+							  "not equal to",
+							  "greater than or equal to",
+							  "less than or equal to"],
 		};
 
 	}
@@ -2033,7 +2125,7 @@
 	Text_Input_Node.prototype.onExecute = function() {
 		// update properties
 		this.text_widget.value = this.properties.text;
-		
+
 		// set output to text
 		this.setOutputData(0, this.properties.text);
 	}
@@ -2050,11 +2142,11 @@
 			"clear_event": "",
 			"last_clear_event": ""
 		};
-		this.text_widget = this.addWidget("text","Text",this.properties.text, "text");	
+		this.text_widget = this.addWidget("text","Text",this.properties.text, "text");
 		this.clear_widget = this.addWidget(
 			"text",
 			"Clear Event",
-			this.properties.clear_event, 
+			this.properties.clear_event,
 			function(value, widget, node){
 				node.properties.clear_event = value;
 				node.eventEmmiter.on(node.properties.clear_event, ()=>{
@@ -2093,7 +2185,7 @@
 		}
 
 		if(this.properties.clear_event !== this.properties.last_clear_event) {
-			this.properties.last_clear_event = this.properties.clear_event;			
+			this.properties.last_clear_event = this.properties.clear_event;
 		}
 
 		this.eventEmmiter.on(this.properties.clear_event, ()=>{
@@ -2120,7 +2212,7 @@
 		// out action
 		this.addOutput("out", LiteGraph.ACTION);
 		// out string
-		this.addOutput("out", "string");		
+		this.addOutput("out", "string");
 		this.properties = {
 			"gate_type": "and",
 			"and_output": "0"
@@ -2214,14 +2306,14 @@
 		} else {
 			this.properties.url = this.url_widget.value;
 		}
-	
+
 		let url = this.properties.url;
 		console.log("url: " + url);
-	
+
 		try {
 			let response = await fetch(url);
 			let blob = await response.blob();
-	
+
 			let base64data = await new Promise((resolve, reject) => {
 				let reader = new FileReader();
 				reader.onloadend = function() {
@@ -2230,14 +2322,14 @@
 				reader.onerror = reject;
 				reader.readAsDataURL(blob);
 			});
-	
+
 			console.log(base64data);
 			this.setOutputData(0, base64data);
 		} catch (error) {
 			console.error('Error:', error);
 		}
 	}
-	
+
 	// Keyword_Extraction_Node
 	function Keyword_Extraction_Node() {
 		this.addInput("text", "string");
@@ -2286,7 +2378,7 @@
 			})
 		});
 		let json = await response.json();
-		
+
 		console.log(json);
 		this.properties.last_output = JSON.stringify(json["keywords"]);
 		this.setOutputData(0, this.properties.last_output);
@@ -2383,7 +2475,7 @@
 	}
 
 
-	
+
 	function Global_Variable_Set_Node(){
 		this.addInput("var name", "string");
 		this.addInput("var value", "string");
@@ -2410,7 +2502,7 @@
 		}
 
 		console.log("setting global var: " + this.properties.var_name + " to " + this.properties.var_value)
-		
+
 		// set global var
 		window[this.properties.var_name] = this.properties.var_value;
 		console.log("window[" + this.properties.var_name + "] = " + window[this.properties.var_name])
@@ -2458,7 +2550,7 @@
 			/* Weaviate_Query_Node */
 			/* takes in a query and a class name and it queries the target weaviate class */
 			Weaviate_Query_Node: Weaviate_Query_Node,
-			
+
 			Random_Selection_Node: Random_Selection_Node,
 			Text_Node: Text_Node,
 			Audio_Generation_Node: Audio_Generation_Node,
@@ -2501,5 +2593,6 @@
 			Dictionary_Bus_Get_Node:Dictionary_Bus_Get_Node,
 			Dictionary_Bus_Set_Node:Dictionary_Bus_Set_Node,
 			Multiline_Text_Node:Multiline_Text_Node,
+			Ollama_Node:Ollama_Node,
 		};
 	}

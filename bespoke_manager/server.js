@@ -15,7 +15,7 @@ async function load_graph(graph_file){
     LiteGraph.registerNodeType("Text/Text", Nodes.Text_Node );
     LiteGraph.registerNodeType("Text/Random Text", Nodes.Random_Selection_Node );
 
-    
+
     LiteGraph.registerNodeType("Text/Prefix Text", Nodes.Prefix_Text_Node );
     LiteGraph.registerNodeType("Text/Suffix Text", Nodes.Suffix_Text_Node );
     LiteGraph.registerNodeType("Text/Concatenate Text", Nodes.Concatenate_Text_Node );
@@ -28,7 +28,7 @@ async function load_graph(graph_file){
 
     //Audio_Generation_Node
     LiteGraph.registerNodeType("Audio/Audio Generation", Nodes.Audio_Generation_Node );
-    //Start_Node 
+    //Start_Node
     LiteGraph.registerNodeType("Control/Start", Nodes.Start_Node );
     //Counter_Node
     LiteGraph.registerNodeType("Control/Counter", Nodes.Counter_Node );
@@ -94,6 +94,8 @@ async function load_graph(graph_file){
     LiteGraph.registerNodeType("IO/Dictionary Bus Set", Nodes.Dictionary_Bus_Set_Node );
     // Text/Multiline_Text_Node
     LiteGraph.registerNodeType("Text/Multiline Text", Nodes.Multiline_Text_Node );
+    // Ollama_Node
+    LiteGraph.registerNodeType("LLM/GPT", Nodes.Ollama_Node );
     let e = graph.configure(graphData);
     if(e) {
         console.log("Error configuring graph: " + e);
@@ -105,13 +107,13 @@ async function load_graph(graph_file){
 function set_inputs(graph, input_data){
     // for each input, find the node with the same name and set the value
     // input is an object where the node name is the key and the value is the value
-    
+
     const textInputs = graph._nodes.filter(node => node.type === "IO/Text Input");
     console.log("textInputs: ", textInputs)
     console.log("input_data: ", input_data)
     textInputs.forEach(input => {
         const node = graph._nodes_by_id[input.id];
-        
+
         if(input_data[input.title] !== undefined){
             console.log("setting input: ", input.title)
             console.log("input_data[input.title]: ", input_data[input.title])
@@ -121,10 +123,10 @@ function set_inputs(graph, input_data){
             return;
         }
 
-        
+
     });
 
-    
+
     if(input_data.input_busses){
         console.log("setting input_busses: ", input_data.input_busses)
         console.log("global_bus_dictionaries: ", global_bus_dictionaries)
@@ -160,7 +162,7 @@ function read_outputs(graph){
 
         if(output_busses[bus_id] === undefined)
             output_busses[bus_id] = [];
-        
+
         console.log("props: ", props)
         output_busses[bus_id].push({
             "name":variable_name,
@@ -199,7 +201,7 @@ async function load_graphs(app){
     await graphs.forEach(async graph => {
         const filename = graph.split('.')[0];
         const extension = graph.split('.')[1];
-        
+
         const graphObj = JSON.parse(fs.readFileSync('graphs/' + graph, 'utf8'));
         const textInputs = graphObj.nodes.filter(node => node.type === "IO/Text Input");
         const textOutputs = graphObj.nodes.filter(node => node.type === "IO/Text Output");
@@ -228,9 +230,9 @@ async function load_graphs(app){
 
             if(input_busses[bus_id] === undefined)
                 input_busses[bus_id] = [];
-            
+
             input_busses[bus_id].push(variable_name);
-            
+
         });
 
         // Function to make array elements unique
@@ -271,7 +273,7 @@ async function load_graphs(app){
             inputs.push({
                 name: input.title || input.id,
                 id: input.id,
-                value: "" 
+                value: ""
             });
         });
         textOutputs.forEach(output => {
@@ -279,12 +281,12 @@ async function load_graphs(app){
             outputs.push({
                 name: output.title || output.id,
                 id: output.id,
-                value: "" 
+                value: ""
             });
         });
 
         //console.log("loading graph: ", filename)
-        
+
         loaded_graphs[filename] = await load_graph('graphs/' + graph);
 
         app.post('/brains/' + filename, async (req, res) => {
@@ -301,7 +303,7 @@ async function load_graphs(app){
         });
         // add a schema endpoint for each graph
         app.get('/brains/' + filename + '/schema', async (req, res) => {
-            
+
             res.send({
                 "inputs": inputs,
                 "outputs": outputs,
@@ -311,8 +313,8 @@ async function load_graphs(app){
         });
         // print all the endpoints
         //console.log("endpoints: ", app._router.stack.filter(r => r.route).map(r => r.route.path));
-        
-        
+
+
     });
 }
 const app = express();
@@ -336,7 +338,7 @@ async function start_server(){
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`Server is running on http://localhost:${PORT}`);
     });
-    
+
 
 }
 
