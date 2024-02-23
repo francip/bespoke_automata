@@ -1,41 +1,40 @@
 {
-  "compilerOptions": {
-    "strict": true,
-    "jsx": "react-jsx",
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "baseUrl": ".",
-    "outDir": "dist",
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable",
-      "ScriptHost",
-      "ESNext.AsyncIterable",
-      "ESNext.Promise",
-      "ESNext.String",
-      "ESNext.Symbol"
-    ],
-    "allowJs": true,
-    "incremental": true,
-    "tsBuildInfoFile": "./build/.tsbuildinfo",
-    "inlineSources": true,
-    "inlineSourceMap": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "paths": {
-      "@app/*": ["src/*"],
-      "@shared/*": ["shared/src/*"],
-      "*": ["node_modules/*"]
+    "compilerOptions": {
+        "strict": true,
+        "jsx": "react-jsx",
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Node",
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "baseUrl": ".",
+        "outDir": "dist",
+        "lib": [
+            "ESNext",
+            "DOM",
+            "DOM.Iterable",
+            "ScriptHost",
+            "ESNext.AsyncIterable",
+            "ESNext.Promise",
+            "ESNext.String",
+            "ESNext.Symbol"
+        ],
+        "allowJs": true,
+        "incremental": true,
+        "inlineSources": true,
+        "inlineSourceMap": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "paths": {
+            "@app/*": ["src/*"],
+            "@shared/*": ["shared/src/*"],
+            "*": ["node_modules/*"]
+        }
+    },
+    "ts-node": {
+        "esm": true,
+        "experimentalSpecifierResolution": "node"
     }
-  },
-  "ts-node": {
-    "esm": true,
-    "experimentalSpecifierResolution": "node"
-  }
 }
