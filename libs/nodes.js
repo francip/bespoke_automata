@@ -6,7 +6,7 @@
 	if(typeof module !== 'undefined') {
 		const Weaviate = require("./weaviate.js");
 		LiteGraph = require("./litegraph.js");
-		Ollama = require("ollama");
+		const Ollama = require("ollama");
 		// dummy window object
 		window = {};
 	}
@@ -47,7 +47,11 @@
 	const default_ollama_model = "llama2";
 
 	call_ollama = async function(messages, model=default_ollama_model) {
+<<<<<<< HEAD
 		  const response = await Ollama.chat({
+=======
+		  const response = await ollama.chat({
+>>>>>>> 45cdc6edff596b8b4676cef0b3baf05183be4faa
 			model: model,
 			messages: messages,
 		  })
