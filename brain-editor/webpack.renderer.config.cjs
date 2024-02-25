@@ -9,7 +9,9 @@ const rendererConfig = {
     plugins,
     resolve: {
         alias: {
-            assets: path.resolve(__dirname, "assets"),
+            'assets': path.resolve(__dirname, "assets/"),
+            '@shared': path.resolve(__dirname, 'shared/src/'),
+            '@mui/material': '@mui/joy',
         },
         extensions: [
             ".js",
