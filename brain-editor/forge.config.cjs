@@ -9,8 +9,8 @@ const { WebpackPlugin } = require("@electron-forge/plugin-webpack");
 const { FusesPlugin } = require("@electron-forge/plugin-fuses");
 const { FuseV1Options, FuseVersion } = require("@electron/fuses");
 
-const mainConfig = require("./webpack.main.config.cjs");
-const rendererConfig = require("./webpack.renderer.config.cjs");
+const electronConfig = require("./webpack.electron.config.cjs");
+const appConfig = require("./webpack.config.cjs");
 
 const config = {
     packagerConfig: {
@@ -26,9 +26,9 @@ const config = {
     plugins: [
         new AutoUnpackNativesPlugin({}),
         new WebpackPlugin({
-            mainConfig,
+            mainConfig: electronConfig,
             renderer: {
-                config: rendererConfig,
+                config: appConfig,
                 entryPoints: [
                     {
                         name: "main_window",
