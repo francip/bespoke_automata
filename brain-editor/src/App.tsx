@@ -2,10 +2,6 @@ import "./App.module.scss";
 
 import { CssVarsProvider } from "@mui/joy/styles";
 import {
-    Card,
-    CardContent,
-    CardOverflow,
-    CircularProgress,
     IconButton,
     Sheet,
     Stack,
