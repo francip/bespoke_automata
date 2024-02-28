@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from "electron";
 
-declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
-declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
+declare const APP_WEBPACK_ENTRY: string;
+declare const APP_PRELOAD_WEBPACK_ENTRY: string;
 
 if (require("electron-squirrel-startup")) {
     app.quit();
@@ -13,7 +13,7 @@ const createWindow = (): void => {
         height: 600,
         width: 800,
         webPreferences: {
-            preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+            preload: APP_PRELOAD_WEBPACK_ENTRY,
             // Enable Node.js integration in the renderer process
             // Read about the security risks here:
             // https://electronjs.org/docs/tutorial/security
@@ -21,7 +21,7 @@ const createWindow = (): void => {
         },
     });
 
-    mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+    mainWindow.loadURL(APP_WEBPACK_ENTRY);
 
     mainWindow.maximize();
 

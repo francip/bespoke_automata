@@ -9,48 +9,58 @@ const { WebpackPlugin } = require("@electron-forge/plugin-webpack");
 const { FusesPlugin } = require("@electron-forge/plugin-fuses");
 const { FuseV1Options, FuseVersion } = require("@electron/fuses");
 
-const electronConfig = require("./webpack.electron.config.cjs");
-const appConfig = require("./webpack.config.cjs");
+module.exports = async (env, argv) => {
+    const [electronConfigModule, appConfigModule, devServerModule] =
+        await Promise.all([
+            import("./webpack.electron.config.js"),
+            import("./webpack.config.js"),
+            import("./webpack.devserver.config.js"),
+        ]);
 
-const config = {
-    packagerConfig: {
-        asar: true,
-    },
-    rebuildConfig: {},
-    makers: [
-        new MakerSquirrel({}),
-        new MakerZIP({}, ["darwin"]),
-        new MakerRpm({}),
-        new MakerDeb({}),
-    ],
-    plugins: [
-        new AutoUnpackNativesPlugin({}),
-        new WebpackPlugin({
-            mainConfig: electronConfig,
-            renderer: {
-                config: appConfig,
-                entryPoints: [
-                    {
-                        name: "main_window",
-                        html: "./public/index.html",
-                        js: "./src/index.tsx",
-                        preload: {
-                            js: "./src/preload.ts",
+    const electronConfig = electronConfigModule.default;
+    const appConfig = appConfigModule.default;
+    const devServer = devServerModule.default;
+
+    return {
+        packagerConfig: {
+            asar: true,
+        },
+        rebuildConfig: {},
+        makers: [
+            new MakerSquirrel({}),
+            new MakerZIP({}, ["darwin"]),
+            new MakerRpm({}),
+            new MakerDeb({}),
+        ],
+        plugins: [
+            new AutoUnpackNativesPlugin({}),
+            new WebpackPlugin({
+                mainConfig: electronConfig(env ?? process.env, argv),
+                renderer: {
+                    nodeIntegration: true,
+                    config: appConfig(env ?? process.env, argv),
+                    entryPoints: [
+                        {
+                            name: "app",
+                            html: "./public/index.html",
+                            js: "./src/app/index.tsx",
+                            preload: {
+                                js: "./electron/src/preload.ts",
+                            },
                         },
-                    },
-                ],
-            },
-        }),
-        new FusesPlugin({
-            version: FuseVersion.V1,
-            [FuseV1Options.RunAsNode]: false,
-            [FuseV1Options.EnableCookieEncryption]: true,
-            [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
-            [FuseV1Options.EnableNodeCliInspectArguments]: false,
-            [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
-            [FuseV1Options.OnlyLoadAppFromAsar]: true,
-        }),
-    ],
+                    ],
+                },
+                devServer: devServer(env ?? process.env, argv),
+            }),
+            new FusesPlugin({
+                version: FuseVersion.V1,
+                [FuseV1Options.RunAsNode]: false,
+                [FuseV1Options.EnableCookieEncryption]: true,
+                [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
+                [FuseV1Options.EnableNodeCliInspectArguments]: false,
+                [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
+                [FuseV1Options.OnlyLoadAppFromAsar]: true,
+            }),
+        ],
+    };
 };
-
-module.exports = config;

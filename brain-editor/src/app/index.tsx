@@ -1,9 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import { App } from "./App";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/inter/wght.css";
+import "@fontsource-variable/inter/slnt.css";
 
-const container = document.getElementById("root");
+import { App } from "./components/App";
+
+const container = document.getElementById("app");
 
 if (container === null) throw new Error("No app container found");
 

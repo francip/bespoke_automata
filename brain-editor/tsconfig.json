@@ -1,41 +1,63 @@
 {
+    "compileOnSave": true,
     "compilerOptions": {
-        "strict": true,
-        "jsx": "react-jsx",
         "target": "ESNext",
         "module": "ESNext",
-        "moduleResolution": "Node",
+        "moduleResolution": "Bundler",
+        "jsx": "react-jsx",
+        "outDir": "./dist/",
+
+        "incremental": true,
+        // "tsBuildInfoFile": "./.build/.tsbuildinfo",
+
+        "strict": true,
+        "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+        "downlevelIteration": true,
         "esModuleInterop": true,
-        "resolveJsonModule": true,
+        "forceConsistentCasingInFileNames": true,
+        "importHelpers": true,
+        "inlineSourceMap": true,
+        "inlineSources": true,
         "isolatedModules": true,
-        "baseUrl": ".",
-        "outDir": "dist",
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "useUnknownInCatchVariables": false,
+        "verbatimModuleSyntax": true,
+
+        "baseUrl": "./",
+
+        "paths": {
+            "@app/*": ["./src/app/*"],
+            "@shared/*": ["./src/shared/*"],
+            "@assets/*": ["./assets/*"],
+            "@mui/material": ["./node_modules/@mui/joy"],
+            // "*": ["node_modules/*"]
+        },
+
         "lib": [
             "ESNext",
-            "DOM",
-            "DOM.Iterable",
-            "ScriptHost",
             "ESNext.AsyncIterable",
             "ESNext.Promise",
             "ESNext.String",
-            "ESNext.Symbol"
-        ],
-        "allowJs": true,
-        "incremental": true,
-        "inlineSources": true,
-        "inlineSourceMap": true,
-        "allowSyntheticDefaultImports": true,
-        "forceConsistentCasingInFileNames": true,
-        "skipLibCheck": true,
-        "paths": {
-            "@app/*": ["src/*"],
-            "@shared/*": ["shared/src/*"],
-            "@mui/material": ["./node_modules/@mui/joy"],
-            "*": ["node_modules/*"]
-        }
+            "ESNext.Symbol",
+            "DOM",
+            "DOM.Iterable",
+            "ScriptHost"
+        ]
     },
-    "ts-node": {
-        "esm": true,
-        "experimentalSpecifierResolution": "node"
-    }
+    "include": [
+        "./src/types/**/*",
+        "./src/app/**/*",
+        "./src/shared/**/*",
+        "./src/electron/**/*",
+        "./assets/**/*",
+        "./.eslintrc.cjs",
+        "./electron-builder.js",
+        "./*.config.*"
+    ]
 }
