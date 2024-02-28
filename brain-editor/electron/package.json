@@ -17,25 +17,13 @@
         }
     ],
     "private": true,
-    "type": "module",
     "main": ".webpack/main",
     "scripts": {
-        "prepare": "husky",
-        "start": "webpack serve --open --hot --mode development",
-        "build": "webpack --mode production",
-        "lint": "eslint --fix --ext .ts,.tsx,.js,.jsx,.cjs 'src/**/*'",
         "app": "npm run electron:start",
-        "electron:start": "electron-forge start",
+        "electron:start": "electron-forge -p .. start",
         "electron:package": "electron-forge package",
         "electron:make": "electron-forge make",
-        "electron:publish": "electron-forge publish",
-        "newapp": "npm --prefix electron run electron:start"
-    },
-    "lint-staged": {
-        ".eslintrc.cjs": "eslint --fix ",
-        "electron-builder.js": "eslint --fix ",
-        "*.config.{ts,cts,mts,js,cjs,mjs}": "eslint --fix ",
-        "src/**/*.{tsx,ts,jsx,js}": "npm run lint"
+        "electron:publish": "electron-forge publish"
     },
     "dependencies": {
         "@babel/runtime": "^7.23.9",

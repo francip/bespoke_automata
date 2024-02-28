@@ -12,9 +12,9 @@ const { FuseV1Options, FuseVersion } = require("@electron/fuses");
 module.exports = async (env, argv) => {
     const [electronConfigModule, appConfigModule, devServerModule] =
         await Promise.all([
-            import("./webpack.electron.config.js"),
-            import("./webpack.config.js"),
-            import("./webpack.devserver.config.js"),
+            import("../webpack.electron.config.js"),
+            import("../webpack.config.js"),
+            import("../webpack.devserver.config.js"),
         ]);
 
     const electronConfig = electronConfigModule.default;
@@ -42,10 +42,10 @@ module.exports = async (env, argv) => {
                     entryPoints: [
                         {
                             name: "app",
-                            html: "./public/index.html",
-                            js: "./src/app/index.tsx",
+                            html: "../public/index.html",
+                            js: "../src/app/index.tsx",
                             preload: {
-                                js: "./src/electron/preload.ts",
+                                js: "../src/electron/preload.ts",
                             },
                         },
                     ],
