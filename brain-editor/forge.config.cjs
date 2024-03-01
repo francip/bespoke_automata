@@ -9,12 +9,14 @@ const { WebpackPlugin } = require("@electron-forge/plugin-webpack");
 const { FusesPlugin } = require("@electron-forge/plugin-fuses");
 const { FuseV1Options, FuseVersion } = require("@electron/fuses");
 
+const path = require("path");
+
 module.exports = async (env, argv) => {
     const [electronConfigModule, appConfigModule, devServerModule] =
         await Promise.all([
-            import("./webpack.electron.config.js"),
-            import("./webpack.config.js"),
-            import("./webpack.devserver.config.js"),
+            import(path.join(process.cwd(), "webpack.electron.config.js")),
+            import(path.join(process.cwd(), "webpack.config.js")),
+            import(path.join(process.cwd(), "webpack.devserver.config.js")),
         ]);
 
     const electronConfig = electronConfigModule.default;
@@ -42,10 +44,10 @@ module.exports = async (env, argv) => {
                     entryPoints: [
                         {
                             name: "app",
-                            html: "./public/index.html",
-                            js: "./src/app/index.tsx",
+                            html: path.join(process.cwd(), "public/index.html"),
+                            js: path.join(process.cwd(), "src/graphdash/index.tsx"),
                             preload: {
-                                js: "./src/electron/preload.ts",
+                                js: path.join(process.cwd(), "src/electron/preload.ts"),
                             },
                         },
                     ],
