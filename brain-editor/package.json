@@ -45,6 +45,8 @@
         "@mui/icons-material": "^5.15.10",
         "@mui/joy": "^5.0.0-beta.11",
         "electron-squirrel-startup": "^1.0.0",
+        "jszip": "^3.10.1",
+        "litegraph.js": "^0.7.18",
         "react": "^18.2.0",
         "react-device-detect": "^2.2.3",
         "react-dom": "^18.2.0"
